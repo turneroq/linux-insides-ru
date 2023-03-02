@@ -78,7 +78,7 @@
 * [Initial ram disk]()
    * [initrd]()
 * [Misc](Misc/README.md)
-    * [Linux kernel development](Misc/linux-misc-1.md)
+    * [Разработка ядра Linux](Misc/linux-misc-1.md)
     * [How the kernel is compiled](Misc/linux-misc-2.md)
     * [Linkers](Misc/linux-misc-3.md)
     * [Program startup process in userspace](Misc/linux-misc-4.md)

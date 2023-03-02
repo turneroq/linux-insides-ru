@@ -1,82 +1,80 @@
 Linux kernel development
 ================================================================================
 
-Introduction
+Вступление
 --------------------------------------------------------------------------------
+Как вы знаете, год назад я начал серию [публикаций](https://0xax.github.io/categories/assembler/) о программировании на языке ассемблера под `x86_64` архитектуру. Я не написал ни одной строчки низкоуровнегого кода до того момента, кроме пары обучающих примеров как `Hello World` в университете. Это было давно, как я уже говорил, я совсем не писал низкоуровнегого кода. Некоторое время назад, я стал интересоваться этими вещами. Я понимал, что могу писать программы, но совсем не понимал как они устроены.
 
-As you already may know, I've started a series of [blog posts](https://0xax.github.io/categories/assembler/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things. I understood that I can write programs, but didn't actually understand how my program is arranged.
+После написания небольшого количества ассемблерного кода, я стал понимать, как моя программа **приблизительно** выглядит после компиляции. Но все равно, я не понимал много других вещей. Например, что происходит, когда `syscall` инструкция выполняется в моем ассемблерном коде, что происходит, когда `printf` функция начинает исполняться или как моя программа общается с другими компьютерами по сети. [Ассемблер](https://ru.wikipedia.org/wiki/%D0%AF%D0%B7%D1%8B%D0%BA_%D0%B0%D1%81%D1%81%D0%B5%D0%BC%D0%B1%D0%BB%D0%B5%D1%80%D0%B0) не дает ответов на мои вопросы и я решил копать глубже. Я начал изучать исходный код ядра Linux и пробовал понять вещи, которыми я интересовался. Код ядра Linux не дал мне ответы на **все** мои вопросы, но мое понимание ядра и процессов связанных с ним улучшилось. 
 
-After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many other things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work or how can my program talk with other computers via network. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers to my questions and I decided to go deeper in my research. I started to learn from the source code of the Linux kernel and tried to understand the things that I'm interested in. The source code of the Linux kernel didn't give me the answers to **all** of my questions, but now my knowledge about the Linux kernel and the processes around it is much better.
-
-I'm writing this part nine and a half months after I've started to learn from the source code of the Linux kernel and published the first [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
+Я пишу эту часть спустя 9,5 месяцев как я начал изучать код ядра Linux и публикую [первую](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/linux-bootstrap-1.html) часть этой книги. Теперь она содержит 40 частей и это еще не конец. Я решил писать эту серию публикаций по большей части для себя. Как вы знаете, ядро Linux - очень огромная часть кода и легко забыть что делает, означает или реализует та или иная часть ядра.  Но вскоре [linux-insides](https://github.com/0xAX/linux-insides) репозиторий стал популярный и после 9 месяцев имеет `9096` звезд:
 
 ![github](images/github.png)
 
-It seems that people are interested in the insides of the Linux kernel. Besides this, in all the time that I have been writing `linux-insides`, I have received many questions from different people about how to begin contributing to the Linux kernel. Generally people are interested in contributing to open source projects and the Linux kernel is not an exception:
+Как оказалось люди заинтересованы во внутренностях ядра Linux. Помимо этого, все время что я пишу `linux-insides`, я получаю много вопросов от разных людей о том, как внести свой вклад в разработку ядра Linux. Как правило, люди заинтересованы в участии в проектах с открытым исходным кодом, и ядро Linux не является исключением.
 
 ![google-linux](images/google_linux.png)
 
-So, it seems that people are interested in the Linux kernel development process. I thought it would be strange if a book about the Linux kernel would not contain a part describing how to take a part in the Linux kernel development and that's why I decided to write it. You will not find information about why you should be interested in contributing to the Linux kernel in this part. But if you are interested how to start with Linux kernel development, this part is for you.
+Итак, как оказалось люди заинтересованы в процессе разработки ядра Linux. Я думал, это будет странно, если книга про ядро Linux не будет содержать описания, как принять участие в разработке ядра, и поэтому я решил написать это. В этой части вы не найдете информации о том, почему вы должны быть заинтересованы в участии в разработке ядра Linux. Но если вы интересуетесь как начать разработку ядра, то эта часть для вас.
 
-Let's start.
+Итак, приступим.
 
-How to start with Linux kernel
+
+Как начать c ядра Linux
 ---------------------------------------------------------------------------------
 
-First of all, let's see how to get, build, and run the Linux kernel. You can run your custom build of the Linux kernel in two ways:
+Во-первых, давайте рассмотрим, как получить, собрать и запустить ядро. Вы можете запустить свою кастомную сборку ядра двумя способами:
 
-* Run the Linux kernel on a virtual machine;
-* Run the Linux kernel on real hardware.
+* Запустить ядро на виртуальной машине.
+* Запустить ядро на реальном железе.
 
-I'll provide descriptions for both methods. Before we start doing anything with the Linux kernel, we need to get it. There are a couple of ways to do this depending on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific to your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
+Я приведу описания обоих способов. До того как мы начнем делать что-либо с ядром Linux, мы должны получить его. Есть пара способов сделать это, в зависимости от вашей цели. Если вы просто хотите обновить текущую версию ядра на вашей компьютере, вы можете использовать гайд для вашего [дистибутива](https://ru.wikipedia.org/wiki/%D0%94%D0%B8%D1%81%D1%82%D1%80%D0%B8%D0%B1%D1%83%D1%82%D0%B8%D0%B2_Linux).
 
-In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade the version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will just need to execute the following commands:
+В первом случае вам надо скачать новую версию ядра через [менеджер пакетов](https://ru.wikipedia.org/wiki/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0_%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F_%D0%BF%D0%B0%D0%BA%D0%B5%D1%82%D0%B0%D0%BC%D0%B8). Например, чтобы обновить версию до `4.1` для [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), надо выполнить следующие команды:
 
 ```
 $ sudo add-apt-repository ppa:kernel-ppa/ppa
 $ sudo apt-get update
 ```
 
-After this execute this command:
+После выполните эту команду:
 
 ```
 $ apt-cache showpkg linux-headers
 ```
 
-and choose the version of the Linux kernel in which you are interested. In the end execute the next command and replace `${version}` with the version that you chose in the output of the previous command:
+и выберите версию ядра, которая вам нужна. В следующий команде замените `${version}` на версию, которую вы выбрали в предыдущей команде:
 
 ```
 $ sudo apt-get install linux-headers-${version} linux-headers-${version}-generic linux-image-${version}-generic --fix-missing
 ```
 
-and reboot your system. After the reboot you will see the new kernel in the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) menu.
+и перезагрузите вашу систему. После перезагрузки вы увидите новое ядро в меню [grub](https://ru.wikipedia.org/wiki/GNU_GRUB).
 
-In the other way if you are interested in the Linux kernel development, you will need to get the source code of the Linux kernel. You can find it on the [kernel.org](https://kernel.org/) website and download an archive with the Linux kernel source code. Actually the Linux kernel development process is fully built around `git` [version control system](https://en.wikipedia.org/wiki/Version_control). So you can get it with `git` from the `kernel.org`:
+В другом случае, если вы заинтересованы в разработке ядра Linux, вам надо получить исходный код ядра. Вы можете найти его на  [kernel.org](https://kernel.org/) сайте. На самом деле процесс разработки ядра Linux полностью построен вокруг `git` [системы контроля версий](https://ru.wikipedia.org/wiki/%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%B0_%D1%83%D0%BF%D1%80%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD%D0%B8%D1%8F_%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F%D0%BC%D0%B8). Поэтому вы можете получить код с `kernel.org` с помощью следующей `git` команды:
 
 ```
 $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 ```
 
-I don't know how about you, but I prefer `github`. There is a [mirror](https://github.com/torvalds/linux) of the Linux kernel mainline repository, so you can clone it with:
+Я не знаю насчет вас, но я предпочитаю `github`. Здесь есть [Зеркало](https://github.com/torvalds/linux) основного репозитория ядра Linux, поэтому вы можете клонировать его с помощью:
 
 ```
 $ git clone git@github.com:torvalds/linux.git
 ```
 
-I  use my own [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute the following command:
+Я использую мой собственный [fork](https://github.com/0xAX/linux) для разработки и когда я хочу подтянуть обновления из основного репозитория, я выполняю следующую команду:
 
 ```
 $ git checkout master
 $ git pull upstream master
 ```
-
-Note that the remote name of the main repository is `upstream`. To add a new remote with the main Linux repository you can execute:
+Заметьте, что имя главного репозитория для удаленного доступа - `upstream`. Чтобы добавить новый удаленный доступ к главному репозиторию Linux, вы можете выполнить:
 
 ```
 git remote add upstream git@github.com:torvalds/linux.git
 ```
-
-After this you will have two remotes:
+После этого у вас будет 2 удаленных доступа:
 
 ```
 ~/dev/linux (master) $ git remote -v
@@ -85,38 +83,36 @@ origin	git@github.com:0xAX/linux.git (push)
 upstream	https://github.com/torvalds/linux.git (fetch)
 upstream	https://github.com/torvalds/linux.git (push)
 ```
+Один из них вашего fork (`origin`) и другой главного репозитория (`upstream`).
 
-One is of your fork (`origin`) and the second is for the main repository (`upstream`).
-
-Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way is to just copy the configuration file of the already installed kernel that is located in the `/boot` directory:
+Сейчас у нас есть локальная копия исходного кода ядра, теперь мы должны настроить и собрать его. Ядро может быть сконфигурировано несколькими способами. Самый простой - просто скопировать конфигурационный файл из уже установленного ядра, который находиться в директории `/boot`.
 
 ```
 $ sudo cp /boot/config-$(uname -r) ~/dev/linux/.config
 ```
 
-If your current Linux kernel was built with the support for access to the `/proc/config.gz` file, you can copy your actual kernel configuration file with this command:
+Если ваше текущее ядро ​​Linux было собрано с помощью доступа к файлу `/proc/config.gz`, вы можете скопировать актуальный файл конфигурации ядра с помощью этой команды:
 
 ```
 $ cat /proc/config.gz | gunzip > ~/dev/linux/.config
 ```
-
-If you are not satisfied with the standard kernel configuration that is provided by the maintainers of your distro, you can configure the Linux kernel manually. There are a couple of ways to do it. The Linux kernel root [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) provides a set of targets that allows you to configure it. For example `menuconfig` provides a menu-driven interface for the kernel configuration:
+Если вы не довольны со стандартной конфигурацией ядра, которая предоставлена разработчиками и maintainers вашего дистрибутива, вы можете вручную настроить ядро. Есть пара способов сделать это. Корневой [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) предоставляет набор targets, который позволяет конфигурировать. Например, `menuconfig` предоставляем меню-интерфейс для конфигурации ядра:
 
 ![menuconfig](images/menuconfig.png)
 
-The `defconfig` argument generates the default kernel configuration file for the current architecture, for example [x86_64 defconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/configs/x86_64_defconfig). You can pass the `ARCH` command line argument to `make` to build `defconfig` for the given architecture:
+`defconfig` аргумент генерирует стандартный файл конфигурации для текущей архитектуры, в нашем примере [x86_64 defconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/configs/x86_64_defconfig). Вы можете передать аргумент командрой строки - `ARCH`, чтобы сделать `make` для `defconfig` для конкретной архитектуры:
 
 ```
 $ make ARCH=arm64 defconfig
 ```
 
-The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to generate a new configuration file where all options will be disabled, enabled, and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
+`allnoconfig`, `allyesconfig` и `allmodconfig` аргументы позволяют вам сгенерировать новый конфигурационный файо, где все опции будут выключены, включены или включены как модули, соотвественно.`nconfig` аргумент командной строки, который предоставляет программу основанную на `ncurses` с меню для конфигурации:
 
 ![nconfig](images/nconfig.png)
 
-And even `randconfig` to generate random Linux kernel configuration file. I will not write about how to configure the Linux kernel or which options to enable because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
+И даже `randconfig` для создания случайного файла конфигурации. Я не буду писать как конфигурировать ядро Linux или какие опции включить, потому что это не имеет смысла делать так по двум причинам: во-первых, я не знаю вашего железа и во-вторых, если я знаю вашего железо, то остается единственная задача, понять как использовать программы для конфигурации ядра, и все они очень просты в использовании.
 
-OK, we now have the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is to just execute:
+Хорошо, сейчас у нас есть исходный код ядра и его конфигурация. Следующий шаг - компиляция ядра. Самый простой способ скомпилировать ядро, это просто выполнить следующее:
 
 ```
 $ make
@@ -141,31 +137,29 @@ System is 4342 kB
 CRC 82703414
 Kernel: arch/x86/boot/bzImage is ready  (#73)
 ```
-
-To increase the speed of kernel compilation you can pass `-jN` command line argument to `make`, where `N` specifies the number of commands to run simultaneously:
+Для ускорения скорости компиляции вы можете передать `-jN` аргумент командой строки в `make`, где `N` определяет число команд запущенных одновременно.
 
 ```
 $ make -j8
 ```
+Если вы хотите собрать ядро для архитектуры, которая отличается от вашей, самый простой способ - передать два аргумента:
 
-If you want to build Linux kernel for an architecture that differs from your current, the simplest way to do it pass two arguments:
+* `ARCH` аргумент и архитектуру под которую собираете;
+* `CROSS_COMPILER` аргумент и префикс tool кросс компилятора;
 
-* `ARCH` command line argument and the name of the target architecture;
-* `CROSS_COMPILER` command line argument and the cross-compiler tool prefix;
-
-For example if we want to compile the Linux kernel for the [arm64](https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features) with default kernel configuration file, we need to execute following command:
+К примеру, если вы хотите скомпилировать ядро для [arm64](https://ru.wikipedia.org/wiki/ARM_(%D0%B0%D1%80%D1%85%D0%B8%D1%82%D0%B5%D0%BA%D1%82%D1%83%D1%80%D0%B0)) со стандартным файлом конфигурации ядра, надо выполнить:
 
 ```
 $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu- defconfig
 $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu-
 ```
 
-As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now that we have compiled the kernel, we can either install it on our computer or just run it in an emulator.
+В результате компиляции мы можем увидеть сжатый образ ядра -`arch/x86/boot/bzImage`. Теперь, когда мы скомпилировали ядро, мы можем либо установить его на свой компьютер, либо просто запустить в эмуляторе.
 
-Installing Linux kernel
+Установка ядра Linux
 --------------------------------------------------------------------------------
 
-As I already wrote we will consider two ways how to launch new kernel: In the first case we can install and run the new version of the Linux kernel on the real hardware and the second is launch the Linux kernel on a virtual machine. In the previous paragraph we saw how to build the Linux kernel from source code and as a result we have got compressed image:
+Как я уже писал, мы рассмотрим два способа как запустить новое ядро: в первом случае, мы может установить и запустить новую версию ядра на реальном железе и во втором, запустить на виртуальной машине. В предыдущем параграфе, мы видели как собирать ядро Linux из исходного кода и как результат мы можем получить сжатый образ ядра:
 
 ```
 ...
@@ -174,20 +168,20 @@ As I already wrote we will consider two ways how to launch new kernel: In the fi
 Kernel: arch/x86/boot/bzImage is ready  (#73)
 ```
 
-After we have got the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage) we need to install `headers`, `modules` of the new Linux kernel with the:
+После того, как мы получили образ [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage) нам надо установить `Заголовки`, `Модули` с помощью:
 
 ```
 $ sudo make headers_install
 $ sudo make modules_install
 ```
 
-and directly the kernel itself:
+и само ядро:
 
 ```
 $ sudo make install
 ```
 
-From this moment we have installed new version of the Linux kernel and now we must tell the `bootloader` about it. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two different Linux distros: Fedora and Ubuntu. There are two different ways to update the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
+С этого момента мы установили новую версию ядра Linux и сейчас мы должны сообщить `загрузчику` об этом. Конечно мы можем добавить это вручную, путем редактирования `/boot/grub2/grub.cfg` конфигурационного файла, но я предпочитаю использовать скрипт для этой цели. Я использую два разных дистрибутива Linux: Fedora и Ubuntu. Существует два различных способа обновить конфигурационный файл [grub](https://ru.wikipedia.org/wiki/GNU_GRUB). Я использую следующий скрипт для этого:
 
 ```shell
 #!/bin/bash
@@ -207,11 +201,11 @@ fi
 echo "${Green}Done.${Color_Off}"
 ```
 
-This is the last step of the new Linux kernel installation and after this you can reboot your computer and select new version of the kernel during boot.
+Это последний шаг установки ядра Linux и после этого вы можете перезагрузить вам компьютр и выбрать новую версию ядра при загрузке.
 
-The second case is to launch new Linux kernel in the virtual machine. I prefer [qemu](https://en.wikipedia.org/wiki/QEMU). First of all we need to build initial ramdisk - [initrd](https://en.wikipedia.org/wiki/Initrd) for this. The `initrd` is a temporary root file system that is used by the Linux kernel during initialization process while other filesystems are not mounted. We can build `initrd` with the following commands:
+Второй случай - запуск ядра на виртуальной машине. Я предпочитаю [qemu](https://ru.wikipedia.org/wiki/QEMU). В первую очередь, нам надо собрать начальный ramdisk - [initrd](https://ru.wikipedia.org/wiki/Initrd) для этого. `initrd` - временная корневая файловая система, которая используется ядром Linux в процессе инициализации пока другие файловые системы не монтированы. Мы можем собрать `initrd` с помощью следующей команды:
 
-First of all we need to download [busybox](https://en.wikipedia.org/wiki/BusyBox) and run `menuconfig` for its configuration:
+Во-первых нам надо скачать [busybox](https://ru.wikipedia.org/wiki/BusyBox) и запустить `menuconfig` для его конфигурации:
 
 ```shell
 $ mkdir initrd
@@ -221,6 +215,8 @@ $ cd busybox-1.23.2/
 $ make menuconfig
 $ make -j4
 ```
+
+`busybox` исполняемый файл - `/bin/busybox`, который содержит набор стандартных иструментов, такие как [coreutils]()
 
 `busybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities). In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
 
